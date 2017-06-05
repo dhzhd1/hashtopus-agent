@@ -627,10 +627,15 @@ namespace hashtopus
                         while (!lspci.StandardOutput.EndOfStream)
                         {
                             string vystup = lspci.StandardOutput.ReadLine();
-                            int pozi = vystup.IndexOf("VGA compatible controller: ");
-                            if (pozi != -1)
-                            {
-                                gpus.Add(vystup.Substring(pozi + 27));
+                            List<string> gpuPattern = new List<string> () {"VGA compatible controller: ", "3D controller: "};
+                            // NVIDIA P100 in 'lspci' shows "3D controller: "
+                            foreach (string pattern in gpuPattern) {
+                                int pozi = vystup.IndexOf (pattern);
+                                if (pozi != -1 && !vystup.Contains("ASPEED")) {
+                                // Remove the ASPEED video controller, which is BMC Video
+                                    gpus.Add (vystup.Substring (pozi + pattern.Length));
+                                    break;
+                                }
                             }
                         }
                     }
